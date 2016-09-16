@@ -9,7 +9,6 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .feature {
-
   animation: hueshift 60s;
   -moz-animation: hueshift 60s infinite;
   -webkit-animation: hueshift 60s infinite;
@@ -19,9 +18,10 @@ h1, h2, h3, h4, h5, h6 {
   text-shadow: 1px 1px 4px rgba(0,0,0,10);
 }
 
+/* Repeats and animates the jumbotron background */
 #featureBackground {
   background: #fff repeat-x 50% 0;
-  background-repeat: repeat-x 50%;  
+  background-repeat: repeat-x 50%;
   animation: scrollBackground 30s linear infinite alternate, fadein 0.5s;
   -webkit-animation: scrollBackground 30s linear infinite alternate, fadein 0.5s;
   -moz-animation: scrollBackground 30s linear infinite alternate, fadein 0.5s;
@@ -61,7 +61,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .content-header * {
-  color: #333; 
+  color: #333;
 }
 
 #wrapper {
@@ -76,32 +76,8 @@ h1, h2, h3, h4, h5, h6 {
   white-space: nowrap;
 }
 
-.transformColourOption {
-  float:left;
-  padding: 10px;
-  border: solid 1px #efefef;
-  margin: 0px 10px 10px 0px;
-}
-
-.transformColourOption input {
-  max-width: 80px;
-}
-
 .unsortedList {
   list-style:none;
-}
-
-.drawablePreviewSize {
-  min-width:394px;
-  min-height:373px;
-  max-width:394px;
-  max-height:373px;
-}
-
-.drawablePreview {
-  position: absolute;
-  left: 0;
-  z-index: 1; 
 }
 
 .unselectable {
@@ -109,17 +85,3 @@ h1, h2, h3, h4, h5, h6 {
   -moz-user-select: none;
   user-select: none;
 }
-
-.drawablesOutput {
-  display:none; 
-}
-
-.mix {
-  display: none;
-}
-
-.tocIndent {
-  margin-left: 1em; 
-}
-
- .ui-draggable-dragging { position:absolute; }
