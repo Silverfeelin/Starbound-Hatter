@@ -1,6 +1,8 @@
 # Credits
 Thank you for making the Starbound Hatter possible!
 
+Special thanks to [Magicks](http://ilovebacons.com/members/magicks.3951/) for helping me figure out how to apply drawables to clothes.
+
 ## Template
 The template the main page uses originates from [Quackit](http://www.quackit.com/), and can be found [here](http://www.quackit.com/html/templates/corporate_website_templates.cfm).
 
