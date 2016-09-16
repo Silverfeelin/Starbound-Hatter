@@ -1,0 +1,125 @@
+body {
+  padding-top: 50px;
+  background-color: #f6f6f6;
+  color: #828282;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: black;
+}
+
+.feature {
+
+  animation: hueshift 60s;
+  -moz-animation: hueshift 60s infinite;
+  -webkit-animation: hueshift 60s infinite;
+  -o-animation: hueshift 60s;
+
+  color: #9d9d9d;
+  text-shadow: 1px 1px 4px rgba(0,0,0,10);
+}
+
+#featureBackground {
+  background: #fff repeat-x 50% 0;
+  background-repeat: repeat-x 50%;  
+  animation: scrollBackground 30s linear infinite alternate, fadein 0.5s;
+  -webkit-animation: scrollBackground 30s linear infinite alternate, fadein 0.5s;
+  -moz-animation: scrollBackground 30s linear infinite alternate, fadein 0.5s;
+  -o-animation: scrollBackground 30s linear infinite alternate, fadein 0.5s;
+}
+
+@keyframes hueshift {
+  0%   {color:#aaf;}
+  17%   {color:#faf;}
+  34%   {color:#faa;}
+  50%   {color:#ffa;}
+  67%   {color:#afa;}
+  84%   {color:#aff;}
+  100%   {color:#aaf;}
+}
+
+@keyframes scrollBackground {
+  from { background-position-x:0%; }
+  to { background-position-x:100%; }
+}
+
+@keyframes fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.small-print {
+  background-color: #f6f6f6;
+  width: 100%;
+  padding: 15px 0;
+}
+
+.content-header {
+  padding-bottom: 9px;
+  margin: 40px 0 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.content-header * {
+  color: #333; 
+}
+
+#wrapper {
+  padding-bottom: 80px;
+  background: #fff;
+}
+
+.textInput {
+  width:100%;
+  max-width:100%;
+  height:48px;
+  white-space: nowrap;
+}
+
+.transformColourOption {
+  float:left;
+  padding: 10px;
+  border: solid 1px #efefef;
+  margin: 0px 10px 10px 0px;
+}
+
+.transformColourOption input {
+  max-width: 80px;
+}
+
+.unsortedList {
+  list-style:none;
+}
+
+.drawablePreviewSize {
+  min-width:394px;
+  min-height:373px;
+  max-width:394px;
+  max-height:373px;
+}
+
+.drawablePreview {
+  position: absolute;
+  left: 0;
+  z-index: 1; 
+}
+
+.unselectable {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.drawablesOutput {
+  display:none; 
+}
+
+.mix {
+  display: none;
+}
+
+.tocIndent {
+  margin-left: 1em; 
+}
+
+ .ui-draggable-dragging { position:absolute; }

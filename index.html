@@ -1,9 +1,159 @@
 <!DOCTYPE html>
-<html>
+<!-- Template by Quackit.com -->
+<html lang="en">
   <head>
-    <title>WIP</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta http-equiv="CACHE-CONTROL" content="NO-CACHE">
+    <link rel="image_src" href="imgs/hat.png">
+    <meta property="og:image" content="imgs/hat.png" />
+    <meta property="og:image:type" content="image/png" />
+    <!-- jQuery -->
+    <script src="scripts/jquery-1.11.3.min.js"></script>
+    <!-- Custom script -->
+    <script src="scripts/script.js"></script>
+    <script src="scripts/FileSaver.min.js"></script>
+    <script src="scripts/drawables.js"></script>
+    <title>SilverMods - Hatter</title>
   </head>
   <body>
-    <h1>WIP</h1>
+    <div id="wrapper">
+      <!-- Navigation -->
+      <div id="navbarTemplate">
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+          <div class="container">
+            <!-- Logo and responsive toggle -->
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              </button>
+              <a class="navbar-brand" href="/">
+              <i class="fa fa-paint-brush"></i>
+              <span>SilverMods</span>
+              </a>
+            </div>
+            <!-- Navbar links -->
+            <div class="collapse navbar-collapse" id="navbar">
+              <ul class="nav navbar-nav">
+                <!-- li class="active" -->
+                <li>
+                  <a href="https://github.com/Silverfeelin/Starbound-Hatter">View on GitHub</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+      </div>
+      <div id="featureBackground">
+        <div id="feature" class="jumbotron feature">
+          <div class="container">
+            <h1>
+              <canvas id="logoHat"></canvas>
+              Starbound Hatter
+            </h1>
+            <p>Multiplayer compatible custom hats!</p>
+          </div>
+        </div>
+      </div>
+      <!-- Content -->
+      <div class="container">
+        <div class="row">
+          <div class="alert alert-warning">
+            • The resulting code does not use exact color values. Applying directives on top of the generated output may result in unexpected changes.<br>
+            • Special thanks to <a href="http://ilovebacons.com/members/magicks.3951/">Magicks</a> for helping me figure out how to apply drawables to clothes.<br>
+            • The easiest way to load the items is to use <a href="https://github.com/wizzomafizzo/starcheat/releases">StarCheat</a>.
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <h3 class="content-header">Generate</h3>
+              <label for="btnSelectImage">Select a hat (up to 85x85):</label><br>
+              <button id="btnSelectImage" class="btn btn-default">Select Image</button>
+              <label for="checkRemoveWhite">Remove white (#FFFFFFFF) from source:</label>
+              <input id="checkRemoveWhite" type="checkbox">
+              <input style="display:none;" id="selectImage" type="file" accept="image/*">
+              <div class="form-group">
+                <label for="itemName">Item name:</label>
+                <input id="itemName" type="text" class="form-control" value="^orange;Custom Hat">
+                <label for="itemDescription">Item description:</label>
+                <input id="itemDescription" type="text" class="form-control" value="A custom hat created by me!">
+                <label for="itemRarity">Item rarity:</label>
+                <select id="itemRarity" class="form-control">
+                  <option value="common">Common</option>
+                  <option value="uncommon">Uncommon</option>
+                  <option value="rare">Rare</option>
+                  <option value="legendary">Legendary</option>
+                  <option value="essential">Essential</option>
+                </select>
+              </div>
+              <label for="checkMask">Remove hair (while hat is equipped):</label>
+              <input id="checkMask" type="checkbox">
+              <br><br>
+              <div class="form-group">
+                <button id="btnPlainText" class="btn btn-success">Generate Item File</button>
+                <button id="btnCommand" class="btn btn-success">Generate Command File</button>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <h3 class="content-header">Preview</h3>
+              <div id="cvsPreview" style="position:relative;width:344px;height:344px;">
+                <canvas class="cvsPreview" width="172" height="172" style="height:172px; width:172px;z-index:0;position:absolute;left:86px;bottom:86px;" id="cvsPreviewCharacter"></canvas>
+                <canvas class="cvsPreview" width="172" height="172" style="position:absolute;left:86px;bottom:86px;height:172px; width:172px; z-index:1;" id="cvsPreviewHair"></canvas>
+                <canvas class="cvsPreview" width="172" height="172" style="position:absolute;left:0px;bottom:0px;height:172px; width:172px; z-index:2;" id="cvsPreviewHat"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <h3 class="content-header">Examples</h3>
+            <p>Hats featured below courtesy of <a href="http://community.playstarbound.com/members/guy.381187/">Guy-</a>, you can view the original mod <a href="http://community.playstarbound.com/resources/anime-manga-video-game-pack.2775/">here</a>.</p>
+            <img style="vertical-align: top;" src="imgs/alucard.png">
+            <img src="imgs/hatter1.png"><br>
+            <img style="vertical-align: top;" src="imgs/varia.png">
+            <img src="imgs/hatter2.png">
+          </div>
+          <div class="col-md-6">
+            <h3 class="content-header">Make a Hat</h3>
+            <p>
+              You can use the below sample images if you want to create your own hat. For existing assets, you'll most likely want to crop to the top right 43x43 pixels.
+            </p>
+            <img style="vertical-align: top;" src="imgs/hatSample.png">
+            <img style="vertical-align: top;" src="imgs/hatterCharacter.png">
+            <img style="vertical-align: top;" src="imgs/hatterCharacterBig.png">
+            <img style="vertical-align: top;" src="imgs/test.png">
+            <p>For Paint.NET users, <a href="imgs/hatterTemplate.pdn">this project file</a> can be used to easily create hats. Make sure you hide the character layer before saving the hat, and that you select the PNG file format!</p>
+            <img style="vertical-align: top;" src="imgs/untickLayer.png">
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Footer -->
+    <div id="footerTemplate">
+      <footer>
+        <div class="col-lg-12 small-print">
+          <div class="container">
+            <p><a href="http://playstarbound.com/">Official Starbound site</a></p>
+            <hr>
+            <div>
+              <p style="float:left;"><a href="credits.html">Credits and Licenses</a></p>
+              <p style="float:right;">Contact me: <a href="mailto:silverfeelin@gmail.com">Silverfeelin@gmail.com</a></p>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <!-- Bootstrap Core CSS -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <!-- Font Awesome CSS -->
+    <link href="css/font-awesome.css" rel="stylesheet">
+    <!-- Bootstrap Core JavaScript -->
+    <script src="scripts/bootstrap.min.js"></script>
+    <!-- Custom CSS: You can use this stylesheet to override any Bootstrap styles and/or apply your own styles -->
+    <link href="css/custom.css?v=1.1" rel="stylesheet">
   </body>
 </html>
