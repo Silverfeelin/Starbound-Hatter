@@ -4,8 +4,8 @@ Thank you for making the Starbound Hatter possible!
 ## Template
 The template the main page uses originates from [Quackit](http://www.quackit.com/), and can be found [here](http://www.quackit.com/html/templates/corporate_website_templates.cfm).
 
-## Libraries
-The Starbound Hatter also uses the following libraries and tools to function the way it does. You can view the official page and the license for each listing by opening the corresponding hyperlinks.
+## Resources
+The Starbound Hatter also uses the following resources to function the way it does. You can view the official page and the license for each listing by opening the corresponding hyperlinks.
 
 Resource | License
 --- | ---
