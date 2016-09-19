@@ -185,15 +185,18 @@ function drawableLoaded() {
   var image = this;
 
   if (!avoidRestrictions && (image.height > 85 || image.width > 85)) {
-    drawableImage = null;
-    $("#selectImage").val('');
-    alert("A dimension of the selected image exceeds 86 pixels. The selection has been cleared.\n\nIf you know what you're doing, feel free to hack your way past this message by setting 'avoidRestrictions' to true.");
+    var r = confirm("A dimension of the selected image exceeds 85 pixels.\nIt is highly discouraged you proceed and use this image, as it can easily cause performance issues for you and other players.\n\nDo you want to proceed using this image?");
+    
+    if (r != true)
+    {
+      drawableImage = null;
+      $("#selectImage").val('');
+      $("#cvsPreviewHat").fadeOut(100, function() {
+        clearCanvas($("#cvsPreviewHat").get(0));
+      });
 
-    $("#cvsPreviewHat").fadeOut(100, function() {
-      clearCanvas($("#cvsPreviewHat").get(0));
-    });
-
-    return;
+      return;
+    }
   }
   // Animate the preview update in three steps.
   var step = -1;
