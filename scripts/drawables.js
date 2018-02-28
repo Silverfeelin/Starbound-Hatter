@@ -5,6 +5,7 @@
  */
 
 var drawableImage, imageCharacter, imageHair, previousHeight = 172;
+var autoCropFrame = false;
 
 /**
  * On load
@@ -121,23 +122,29 @@ function clearCanvas(canvas, dx, dy, width, height) {
  * @param {object} canvas - Canvas DOM element to draw the image on.
  * @param {object} image - Image to draw.
  * @param {number} [scale=1] Scale of image, 1 is original size.
- * @param {object} [offset=[0,0]] Array with two numbers which represent the horizontal and vertical offset of the image relative to the canvas.
- * @param {object} [resizeCanvas] Array with two numbers which represent the horizontal and vertical dimensions of the canvas. Defaults to image dimensions multiplied by the scale.
+ * @param {object} [srcStart=[0,0]] Start point of the source image.
+ * @param {object} [srcSize] Size of the region to capture from the source image. Defaults to (image size - srcStart).
+ * @param {object} [destStart=[0,0]] Destination point of the drawn image.
+ * @param {object} [destSize] Size of drawn image. Defaults to srcSize * scale.
  */
-function drawResizedImage(canvas, image, scale, offset, resizeCanvas) {
+function drawResizedImage(canvas, image, scale, srcStart, srcSize, destStart, destSize) {
   if (scale === undefined || scale == null)
     scale = 1;
-  if (offset === undefined || offset == null)
-    offset = [0,0];
-  if (resizeCanvas === undefined || resizeCanvas == null)
-    resizeCanvas = [image.width * scale, image.height * scale];
+  if (srcStart === undefined || srcStart == null)
+    srcStart = [0,0];
+  if (srcSize === undefined || srcSize == null)
+    srcSize = [image.width - srcStart[0], image.height - srcStart[1]];
+  if (destStart === undefined || destStart == null)
+    destStart = [0,0];
+  if (destSize === undefined || destSize == null)
+    destSize = [srcSize[0] * scale, srcSize[1] * scale];
 
-  if (canvas.width != resizeCanvas[0] || canvas.height != resizeCanvas[1])
+  if (canvas.width != destSize[0] || canvas.height != destSize[1])
   {
-    $(canvas).css("width", resizeCanvas[0]);
-    $(canvas).css("height", resizeCanvas[1]);
-    canvas.setAttribute("width", resizeCanvas[0]);
-    canvas.setAttribute("height", resizeCanvas[1]);
+    $(canvas).css("width", destSize[0]);
+    $(canvas).css("height", destSize[1]);
+    canvas.setAttribute("width", destSize[0]);
+    canvas.setAttribute("height", destSize[1]);
   }
 
   var context = canvas.getContext('2d');
@@ -145,7 +152,7 @@ function drawResizedImage(canvas, image, scale, offset, resizeCanvas) {
   context.mozImageSmoothingEnabled = false;
   context.msImageSmoothingEnabled = false;
   context.imageSmoothingEnabled = false;
-  context.drawImage(image, 0 + offset[0], 0 + offset[1], image.width * scale, image.height * scale);
+  context.drawImage(image, srcStart[0], srcStart[1], srcSize[0], srcSize[1], destStart[0], destStart[1], destSize[0], destSize[1]);
 }
 
 /**
@@ -183,8 +190,10 @@ var avoidRestrictions = false;
  */
 function drawableLoaded() {
   var image = this;
-
-  if (!avoidRestrictions && (image.height > 85 || image.width > 85)) {
+  
+  autoCropFrame = (image.width == 86 && image.height == 215);
+  
+  if (!autoCropFrame && !avoidRestrictions && (image.height > 85 || image.width > 85)) {
     var r = confirm("A dimension of the selected image exceeds 85 pixels.\nIt is highly discouraged you proceed and use this image, as it can easily cause performance issues for you and other players.\n\nDo you want to proceed using this image?");
     
     if (r != true)
@@ -213,12 +222,18 @@ function drawableLoaded() {
     function() {
       drawableImage = image;
       clearCanvas($("#cvsPreviewHat").get(0));
-
-      drawResizedImage($("#cvsPreviewHat").get(0), drawableImage, 4);
-      var bot = (86-drawableImage.height)*2,
-          lef = (86-drawableImage.width)*2
-      $("#cvsPreviewHat").animate({bottom: bot, left: lef}, 200, nextStep);
-
+      var bot, lef;
+      if (!autoCropFrame) {
+        drawResizedImage($("#cvsPreviewHat").get(0), drawableImage, 4);
+        bot = (86-drawableImage.height)*2,
+        lef = (86-drawableImage.width)*2;
+      } else {
+        console.log("a");
+        drawResizedImage($("#cvsPreviewHat").get(0), drawableImage, 4, [43, 0], [43, 43]);
+        bot = 86;
+        lef = 86;
+      }
+        $("#cvsPreviewHat").animate({bottom: bot, left: lef}, 200, nextStep);
     },
     // Step three: Fade in the new hat.
     function() {
@@ -240,7 +255,7 @@ function drawableLoaded() {
 function generatePlainText() {
 
   if (confirmDrawable(true)) {
-    var directives = generateDirectives(drawableImage, {setWhite : true});
+    var directives = generateDirectives(drawableImage, {setWhite : true, crop : autoCropFrame});
 
     var obj = { "count" : 1,
                "name" : "eyepatchhead",
@@ -283,7 +298,7 @@ function generatePlainText() {
 function generateCommand() {
 
   if (confirmDrawable(true)) {
-    var directives = generateDirectives(drawableImage, {setWhite : true});
+    var directives = generateDirectives(drawableImage, {setWhite : true, crop : autoCropFrame});
 
     var obj = {
                 directives : "",
@@ -353,6 +368,7 @@ function getSignPlaceHolder() {
  * Uses the blendmult on white pixels method to concatenate signplaceholder assets.
  * Supported imageOptions:
  * setWhite : true // Sets the base image white (including transparent pixels) before applying the image. Clears white pixels at the end of the directives.
+ * crop : true // Crops a hat frame from a 86x215 source image (top right 43x43).
  * @param {object} image - Image to create directives for.
  * @param {object} [imageOptions] - JSON table containing supported image options.
  * @returns {string} Formatted directives string.
@@ -364,22 +380,32 @@ function generateDirectives(image, imageOptions) {
   if (imageOptions === undefined || imageOptions == null)
     imageOptions = {};
 
+  var width = imageOptions.crop ? 43 : image.width,
+      height = imageOptions.crop ? 43 : image.height;
+  
   // Fetch color codes for the signplaceholder asset.
   var colors = getSignPlaceHolder();
 
   // Draw the selected image on a canvas, to fetch the pixel data.
   var canvas = document.createElement("canvas");
-  canvas.width = image.width;
-  canvas.height = image.height;
+  canvas.width = width;
+  canvas.height = height;
 
   var canvasContext = canvas.getContext("2d");
 
   // Flip image upside down, to compensate for the 'inverted' y axis.
-  canvasContext.translate(0, image.height);
-  canvasContext.scale(1,-1);
-  canvasContext.drawImage(image, 0, 0, canvas.width, canvas.height);
-  canvasContext.scale(1,1);
-
+  if (!imageOptions.crop) {
+    canvasContext.translate(0, image.height);
+    canvasContext.scale(1,-1);
+    canvasContext.drawImage(image, 0, 0, width, height);
+    canvasContext.scale(1,1);
+  } else {
+    canvasContext.translate(0, 43);
+    canvasContext.scale(1,-1);
+    canvasContext.drawImage(image, 43, 0, 43, 43, 0, 0, 43, 43);
+    canvasContext.scale(1,1);
+  }
+  
   var drawables = "";
 
   // Set the source image white before starting.
@@ -387,16 +413,16 @@ function generateDirectives(image, imageOptions) {
     drawables = "?setcolor=ffffff?replace;00000000=ffffff;ffffff00=ffffff?setcolor=ffffff" + drawables;
 
   // Scale and crop
-  var maxDimension = image.height > image.width ? image.height : image.width;
+  var maxDimension = height > width ? height : width;
   var scale = Math.ceil(maxDimension / 43);
-  drawables = drawables + "?scalenearest=" + scale + "?crop=0;0;" + image.width + ";" + image.height;
+  drawables = drawables + "?scalenearest=" + scale + "?crop=0;0;" + width + ";" + height;
 
   var drawableTemplate = "?blendmult=/objects/outpost/customsign/signplaceholder.png"
 
   // Calculate amount of signplaceholder frames needed horizontally and vertically to form the image.
   var frameCount = [
-    Math.ceil(image.width / 32),
-    Math.ceil(image.height / 8)
+    Math.ceil(width / 32),
+    Math.ceil(height / 8)
   ];
 
   // For every frame, create a new blendmult 'layer'.
