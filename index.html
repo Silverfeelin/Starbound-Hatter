@@ -88,12 +88,16 @@
                         <option value="essential">Essential</option>
                      </select>
                   </div>
-                  <label for="checkMask">Remove hair (while hat is equipped):</label>
+                  <label for="checkMask">Remove hair:</label>
                   <input id="checkMask" type="checkbox">
-                  <br><br>
+
+                  <br>
+                  <label for="checkHideBody">Hide body:</label>
+                  <input id="checkHideBody" type="checkbox">
+                  <br>
                   <div class="form-group">
-                     <button id="btnPlainText" class="btn btn-success">Generate Item File</button>
-                     <button id="btnCommand" class="btn btn-success">Generate Command File</button>
+                     <button id="btnPlainText" class="btn btn-success" title="Generates an item descriptor that can be imported using StarCheat.">Generate Item File</button>
+                     <button id="btnCommand" class="btn btn-success" title="Generates a /spawnitem command that can be executed in-game.">Generate Command File</button>
                   </div>
                </div>
                <div class="col-md-6">

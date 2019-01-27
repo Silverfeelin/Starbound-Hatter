@@ -42,13 +42,29 @@ $(function() {
   };
   imageHair.src = "imgs/hatterHair.png";
 
+  let checkMask = $("#checkMask")[0];
+  let checkHideBody = $("#checkHideBody")[0];
+  let canvasHair = $("#cvsPreviewHair");
+  let canvasBody = $("#cvsPreviewCharacter");
+
   // Bind hair mask
-  $("#checkMask").change(function() {
-    var canvasHair = $("#cvsPreviewHair");
-    if (this.checked)
+  $(checkMask).change(function() {
+    if (checkMask.checked) {
       canvasHair.fadeOut(100);
-    else
+    } else if (!checkHideBody.checked) {
       canvasHair.fadeIn(100);
+    }
+  });
+
+  // Bind hide body
+  $(checkHideBody).change(function() {
+    if (this.checked) {
+      canvasBody.fadeOut(100);
+      canvasHair.fadeOut(100);
+    } else {
+      canvasBody.fadeIn(100);
+      if (!checkMask.checked) canvasHair.fadeIn(100);
+    }
   });
 });
 
@@ -190,12 +206,12 @@ var avoidRestrictions = false;
  */
 function drawableLoaded() {
   var image = this;
-  
+
   autoCropFrame = (image.width == 86 && image.height == 215);
-  
+
   if (!autoCropFrame && !avoidRestrictions && (image.height > 85 || image.width > 85)) {
     var r = confirm("A dimension of the selected image exceeds 85 pixels.\nIt is highly discouraged you proceed and use this image, as it can easily cause performance issues for you and other players.\n\nDo you want to proceed using this image?");
-    
+
     if (r != true)
     {
       drawableImage = null;
@@ -255,10 +271,11 @@ function drawableLoaded() {
 function generatePlainText() {
 
   if (confirmDrawable(true)) {
-    var directives = generateDirectives(drawableImage, {setWhite : true, crop : autoCropFrame});
+    let directives = generateDirectives(drawableImage, {setWhite : true, crop : autoCropFrame});
+    let hideBody = $("#checkHideBody")[0].checked;
 
     var obj = { "count" : 1,
-               "name" : "eyepatchhead",
+               "name" : hideBody ? "frogghead" : "eyepatchhead",
                "parameters" :  {
                  directives : "",
                  description : "This is my hat! Give it back!",
@@ -298,14 +315,15 @@ function generatePlainText() {
 function generateCommand() {
 
   if (confirmDrawable(true)) {
-    var directives = generateDirectives(drawableImage, {setWhite : true, crop : autoCropFrame});
+    let directives = generateDirectives(drawableImage, {setWhite : true, crop : autoCropFrame});
+    let hideBody = $("#checkHideBody")[0].checked;
 
     var obj = {
                 directives : "",
                 description : "This is my hat! Give it back!",
                 femaleFrames : "head.png",
                 inventoryIcon : "head.png",
-                itemName : "eyepatchhead",
+                itemName : hideBody ? "frogghead" : "eyepatchhead",
                 maleFrames : "head.png",
                 mask : "mask.png",
                 maxStack : 1,
@@ -315,7 +333,7 @@ function generateCommand() {
                 statusEffects : [],
                 tooltipKind : "armor"
               };
-    
+
     // Double escaping to work around the escaping done by the chat processor (ew).
     obj.shortdescription = $("#itemName").get(0).value.replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
     obj.description = $("#itemDescription").get(0).value.replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
@@ -329,8 +347,8 @@ function generateCommand() {
     }
 
     // Escape quotes in JSON parameters to prevent early end of stream (since parameters are wrapped in ' in the chat processor).
-    var cmd = "/spawnitem eyepatchhead 1 '" + JSON.stringify(obj).replace(/'/g, "\\'") + "'";
-    
+    var cmd = "/spawnitem " + obj.itemName + " 1 '" + JSON.stringify(obj).replace(/'/g, "\\'") + "'";
+
     var blob = new Blob([ cmd ], {type: "text/plain;charset=utf8"});
     saveAs(blob, "CustomHatCommand.txt");
   }
@@ -382,7 +400,7 @@ function generateDirectives(image, imageOptions) {
 
   var width = imageOptions.crop ? 43 : image.width,
       height = imageOptions.crop ? 43 : image.height;
-  
+
   // Fetch color codes for the signplaceholder asset.
   var colors = getSignPlaceHolder();
 
@@ -405,7 +423,7 @@ function generateDirectives(image, imageOptions) {
     canvasContext.drawImage(image, 43, 0, 43, 43, 0, 0, 43, 43);
     canvasContext.scale(1,1);
   }
-  
+
   var drawables = "";
 
   // Set the source image white before starting.
