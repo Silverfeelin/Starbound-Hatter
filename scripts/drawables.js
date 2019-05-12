@@ -409,7 +409,7 @@ function generateDirectives(image, imageOptions) {
 
   drawables = "?setcolor=fff?replace;fff0=fff?crop;0;0;2;2" +
     "?blendmult=/items/active/weapons/protectorate/aegisaltpistol/beamend.png;0;0" +
-    `?replace;A355C0A5=00010000;A355C07B=${bottomRight};FFFFFFA5=${topLeft};FFFFFF7B=${topRight}` +
+    `?replace;a355c0a5=00010000;a355c07b=${bottomRight};ffffffa5=${topLeft};ffffff7b=${topRight}` +
     `?scale=${width};${height}` +
     `?crop;1;1;${width + 1};${height + 1}` +
     "?replace";
