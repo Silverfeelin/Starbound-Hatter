@@ -4,6 +4,34 @@
  * https://creativecommons.org/licenses/by/3.0/
  */
 
+
+ // Page load
+ $(function() {
+   "use strict";
+
+   // Set feature background image based on time of day.
+   var time = new Date().getHours(), path;
+   path = time >= 18 || time < 6 ? "imgs/bgNight.jpg" : "imgs/bgDay2.jpg";
+   document.getElementById("featureBackground").style.backgroundImage = "url('" + path +  "')";
+ });
+
+function colorToHex(color) {
+  var colors = [];
+  colors.push(digitToHex(color[0]));
+  colors.push(digitToHex(color[1]));
+  colors.push(digitToHex(color[2]));
+  colors.push(digitToHex(color[3]));
+  if (colors[3] === 'ff') { delete colors[3] }
+
+  const long = colors.some((s) => s[0] !== s[1]);
+  return long ? colors.join('') : `${colors[0][0]}${colors[1][0]}${colors[2][0]}${colors[3] ? colors[3][0] : ''}`;
+}
+
+function digitToHex(digit) {
+  const h = Number(digit).toString(16);
+  return h.length === 1 ? `0${h}` : h;
+}
+
 var drawableImage, imageCharacter, imageHair, previousHeight = 172;
 var autoCropFrame = false;
 
@@ -11,7 +39,6 @@ var autoCropFrame = false;
  * On load
  */
 $(function() {
-
   loadFeatureLogo();
 
   // Bind select image
@@ -100,13 +127,9 @@ function loadFeatureLogo() {
  * @returns {boolean} Value indicating whether a drawable is selected or not.
  */
 function confirmDrawable(alertUser) {
-  if (drawableImage == null) {
-    if (alertUser)
-      alert("Please select a valid image first!");
-
-    return false;
-  } else
-    return true;
+  if (!drawableImage && alertUser)
+    alert("Please select a valid image first!");
+  return !!drawableImage;
 }
 
 /**
@@ -177,7 +200,6 @@ function drawResizedImage(canvas, image, scale, srcStart, srcSize, destStart, de
  * @param {function} callback - Image onload function.
  */
 function readDrawableInput(input, callback) {
-
   if (input.files && input.files.length > 0) {
     // Use first file. By default, users shouldn't be able to select multiple files.
     var file = input.files[0];
@@ -186,19 +208,11 @@ function readDrawableInput(input, callback) {
     fr.onload = function() {
       var img = new Image;
       img.onload = callback;
-
       img.src = this.result;
     };
     fr.readAsDataURL(file);
-
   }
 }
-
-/**
- * Variable that can be set to true (in console) to avoid the dimension restrictions on the input image.
- * Note: You'll have to manually adjust the (scale and) crop directive. I could probably automate this, but the offsets seemed particularly random.
- */
-var avoidRestrictions = false;
 
 /**
  * Called when the selected drawable is loaded.
@@ -207,25 +221,19 @@ var avoidRestrictions = false;
 function drawableLoaded() {
   var image = this;
 
+  // With the scale method we can't go over 256x256
+  if (image.width > 256 || image.height > 256) {
+    alert('Image dimension exceeded width or height of 256 pixels. The Hatter does not support these dimensions.');
+    drawableImage = null;
+    $("#selectImage").val('');
+    $("#cvsPreviewHat").fadeOut(100, function() { clearCanvas($("#cvsPreviewHat").get(0)); });
+    return;
+  }
+
   autoCropFrame = (image.width == 86 && image.height == 215);
 
-  if (!autoCropFrame && !avoidRestrictions && (image.height > 85 || image.width > 85)) {
-    var r = confirm("A dimension of the selected image exceeds 85 pixels.\nIt is highly discouraged you proceed and use this image, as it can easily cause performance issues for you and other players.\n\nDo you want to proceed using this image?");
-
-    if (r != true)
-    {
-      drawableImage = null;
-      $("#selectImage").val('');
-      $("#cvsPreviewHat").fadeOut(100, function() {
-        clearCanvas($("#cvsPreviewHat").get(0));
-      });
-
-      return;
-    }
-  }
   // Animate the preview update in three steps.
   var step = -1;
-
   var steps = [
     // Step one: Fade out the previous hat, if there is one.
     function() {
@@ -244,7 +252,6 @@ function drawableLoaded() {
         bot = (86-drawableImage.height)*2,
         lef = (86-drawableImage.width)*2;
       } else {
-        console.log("a");
         drawResizedImage($("#cvsPreviewHat").get(0), drawableImage, 4, [43, 0], [43, 43]);
         bot = 86;
         lef = 86;
@@ -252,9 +259,7 @@ function drawableLoaded() {
         $("#cvsPreviewHat").animate({bottom: bot, left: lef}, 200, nextStep);
     },
     // Step three: Fade in the new hat.
-    function() {
-      $("#cvsPreviewHat").fadeIn(100);
-    }
+    function() { $("#cvsPreviewHat").fadeIn(100); }
   ];
 
   var nextStep = function() {
@@ -265,93 +270,64 @@ function drawableLoaded() {
   nextStep();
 }
 
+
+function generateItem() {
+  if (!confirmDrawable(true)) { return; }
+
+  let directives = generateDirectives(drawableImage, {crop : autoCropFrame});
+  let hideBody = $("#checkHideBody")[0].checked;
+
+  var obj = {
+    name: hideBody ? "frogghead" : "eyepatchhead",
+    count: 1,
+    parameters: {
+      directives : "",
+      description : "This is my hat! Give it back!",
+      femaleFrames : "head.png",
+      inventoryIcon : "head.png",
+      maleFrames : "head.png",
+      mask : "mask.png",
+      maxStack : 1,
+      price : 0,
+      rarity : "common",
+      shortdescription : "Custom Hat",
+      statusEffects : [],
+      tooltipKind : "armor"
+    }
+  };
+
+  if ($("#checkMask").get(0).checked)
+    obj.parameters.mask = "?submask=/items/armors/decorative/hats/eyepatch/mask.png";
+
+  // Double escaping to work around the escaping done by the chat processor (ew).
+  obj.parameters.shortdescription = $("#itemName").get(0).value.replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
+  obj.parameters.description = $("#itemDescription").get(0).value.replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
+  obj.parameters.rarity = $("#itemRarity").get(0).value;
+  obj.parameters.directives = directives;
+
+  return obj;
+}
 /**
  * Generates a hat export for the current image, and starts a download for it.
  */
 function generatePlainText() {
+  var obj = generateItem();
 
-  if (confirmDrawable(true)) {
-    let directives = generateDirectives(drawableImage, {setWhite : true, crop : autoCropFrame});
-    let hideBody = $("#checkHideBody")[0].checked;
-
-    var obj = { "count" : 1,
-               "name" : hideBody ? "frogghead" : "eyepatchhead",
-               "parameters" :  {
-                 directives : "",
-                 description : "This is my hat! Give it back!",
-                 femaleFrames : "head.png",
-                 inventoryIcon : "head.png",
-                 itemName : "eyepatchhead",
-                 maleFrames : "head.png",
-                 mask : "mask.png",
-                 maxStack : 1,
-                 price : 0,
-                 rarity : "common",
-                 shortdescription : "Custom Hat",
-                 statusEffects : [],
-                 tooltipKind : "armor"
-               }
-              };
-
-    obj.parameters.shortdescription = $("#itemName").get(0).value;
-    obj.parameters.description = $("#itemDescription").get(0).value;
-    obj.parameters.rarity = $("#itemRarity").get(0).value;
-    obj.parameters.directives = directives;
-
-    if ($("#checkMask").get(0).checked)
-    {
-      var mask = "?submask=/items/armors/decorative/hats/eyepatch/mask.png";
-      obj.parameters.mask = mask;
-    }
-
-    var blob = new Blob([ JSON.stringify(obj, null, 2) ], {type: "text/plain;charset=utf8"});
-    saveAs(blob, "CustomHat.json");
-  }
+  var blob = new Blob([ JSON.stringify(obj, null, 2) ], {type: "text/plain;charset=utf8"});
+  saveAs(blob, "CustomHat.json");
 }
 
 /**
  * Generates a hat export for the current image, and starts a download for it.
  */
 function generateCommand() {
+  var obj = generateItem();
 
-  if (confirmDrawable(true)) {
-    let directives = generateDirectives(drawableImage, {setWhite : true, crop : autoCropFrame});
-    let hideBody = $("#checkHideBody")[0].checked;
+  // Escape quotes in JSON parameters to prevent early end of stream (since parameters are wrapped in ' in the chat processor).
+  var cmd = "/spawnitem " + obj.name + " 1 '" + JSON.stringify(obj.parameters).replace(/'/g, "\\'") + "'";
 
-    var obj = {
-                directives : "",
-                description : "This is my hat! Give it back!",
-                femaleFrames : "head.png",
-                inventoryIcon : "head.png",
-                itemName : hideBody ? "frogghead" : "eyepatchhead",
-                maleFrames : "head.png",
-                mask : "mask.png",
-                maxStack : 1,
-                price : 0,
-                rarity : "common",
-                shortdescription : "Custom Hat",
-                statusEffects : [],
-                tooltipKind : "armor"
-              };
-
-    // Double escaping to work around the escaping done by the chat processor (ew).
-    obj.shortdescription = $("#itemName").get(0).value.replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
-    obj.description = $("#itemDescription").get(0).value.replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
-    obj.rarity = $("#itemRarity").get(0).value;
-    obj.directives = directives;
-
-    if ($("#checkMask").get(0).checked)
-    {
-      var mask = "?submask=/items/armors/decorative/hats/eyepatch/mask.png";
-      obj.mask = mask;
-    }
-
-    // Escape quotes in JSON parameters to prevent early end of stream (since parameters are wrapped in ' in the chat processor).
-    var cmd = "/spawnitem " + obj.itemName + " 1 '" + JSON.stringify(obj).replace(/'/g, "\\'") + "'";
-
-    var blob = new Blob([ cmd ], {type: "text/plain;charset=utf8"});
-    saveAs(blob, "CustomHatCommand.txt");
-  }
+  var blob = new Blob([ cmd ], {type: "text/plain;charset=utf8"});
+  saveAs(blob, "CustomHatCommand.txt");
 }
 
 /**
@@ -424,84 +400,26 @@ function generateDirectives(image, imageOptions) {
     canvasContext.scale(1,1);
   }
 
-  var drawables = "";
+  const r = digitToHex(width - 1);
+  const t = digitToHex(height - 1);
 
-  // Set the source image white before starting.
-  if (imageOptions.hasOwnProperty('setWhite') && imageOptions.setWhite)
-    drawables = "?setcolor=ffffff?replace;00000000=ffffff;ffffff00=ffffff?setcolor=ffffff" + drawables;
+  const bottomRight = `${r}010000`;
+  const topLeft = `0001${t}00`;
+  const topRight = `${r}01${t}00`;
 
-  // Scale and crop
-  var maxDimension = height > width ? height : width;
-  var scale = Math.ceil(maxDimension / 43);
-  drawables = drawables + "?scalenearest=" + scale + "?crop=0;0;" + width + ";" + height;
+  drawables = "?setcolor=fff?replace;fff0=fff?crop;0;0;2;2" +
+    "?blendmult=/items/active/weapons/protectorate/aegisaltpistol/beamend.png;0;0" +
+    `?replace;A355C0A5=00010000;A355C07B=${bottomRight};FFFFFFA5=${topLeft};FFFFFF7B=${topRight}` +
+    `?scale=${width};${height}` +
+    `?crop;1;1;${width + 1};${height + 1}` +
+    "?replace";
 
-  var drawableTemplate = "?blendmult=/objects/outpost/customsign/signplaceholder.png"
-
-  // Calculate amount of signplaceholder frames needed horizontally and vertically to form the image.
-  var frameCount = [
-    Math.ceil(width / 32),
-    Math.ceil(height / 8)
-  ];
-
-  // For every frame, create a new blendmult 'layer'.
-  for (var frameX = 0; frameX < frameCount[0]; frameX++) {
-    for (var frameY = 0; frameY < frameCount[1]; frameY++) {
-      var currentX = frameX * 32;
-      var currentY = frameY * 8;
-
-      var drawable = drawableTemplate;
-
-      drawable += ";" + (-frameX * 32) + ";" + (frameY * - 8) + "?replace";
-
-      var containsPixels = false;
-
-      var removeWhite = $("#checkRemoveWhite").get(0).checked;
-
-      // For every pixel of this frame, fetch it's color code.
-      for (var x = 0; x < 32; x++) {
-        for (var y = 0; y < 8; y++) {
-          // Raise Y now so we can safely continue when checks fail; remember to check y-1!
-          currentY++;
-
-          if (currentX > canvas.width - 1 || currentY-1 > canvas.height - 1)
-            continue;
-
-          var pixelC = canvasContext.getImageData(currentX, currentY-1, 1, 1).data;
-
-          if (pixelC[3] != 0)
-            containsPixels = true;
-
-          if (pixelC[0] == 255 && pixelC[1] == 255 && pixelC[2] == 255)
-          {
-            if (removeWhite && pixelC[3] == 255)
-            {
-              pixelC = [0,0,0,0];
-            }
-            else
-            {
-              pixelC[0] = 254;
-              pixelC[1] = 254;
-              pixelC[2] = 254;
-            }
-
-          }
-
-          drawable += ";" + colorToHex(colors[x][y]) + "=" + colorToHex(pixelC);
-        }
-
-        currentX++;
-        currentY = frameY * 8;
-      }
-
-      // If the current frame does not contain nay pixels, we don't have to add the layer.
-      if (containsPixels)
-        drawables += drawable;
+  for (let x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) {
+      const c = canvasContext.getImageData(x, y, 1, 1).data;
+      if (c[3] <= 1) continue;
+      drawables += `;${digitToHex(x)}01${digitToHex(y)}00=${colorToHex(c)}`;
     }
-  }
-
-  // Finally, revert the setWhite.
-  if (imageOptions.hasOwnProperty('setWhite') && imageOptions.setWhite) {
-    drawables += "?replace;ffffffff=00000000";
   }
 
   return drawables;
