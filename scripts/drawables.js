@@ -71,6 +71,7 @@ $(function() {
 
   let checkMask = $("#checkMask")[0];
   let checkHideBody = $("#checkHideBody")[0];
+  let checkLegacy = $("#checkLegacy")[0];
   let canvasHair = $("#cvsPreviewHair");
   let canvasBody = $("#cvsPreviewCharacter");
 
@@ -274,7 +275,9 @@ function drawableLoaded() {
 function generateItem() {
   if (!confirmDrawable(true)) { return; }
 
-  let directives = generateDirectives(drawableImage, {crop : autoCropFrame});
+  let directives = $("#checkLegacy")[0].checked
+    ? generateLegacyDirectives(drawableImage, {crop: autoCropFrame, setWhite: true})
+    : generateDirectives(drawableImage, {crop : autoCropFrame});
   let hideBody = $("#checkHideBody")[0].checked;
 
   var obj = {
@@ -420,6 +423,122 @@ function generateDirectives(image, imageOptions) {
       if (c[3] <= 1) continue;
       drawables += `;${digitToHex(x)}01${digitToHex(y)}00=${colorToHex(c)}`;
     }
+  }
+
+  return drawables;
+}
+
+/**
+ * Generate and returns a directives string to form the given image.
+ * Uses the blendmult on white pixels method to concatenate signplaceholder assets.
+ * Supported imageOptions:
+ * setWhite : true // Sets the base image white (including transparent pixels) before applying the image. Clears white pixels at the end of the directives.
+ * crop : true // Crops a hat frame from a 86x215 source image (top right 43x43).
+ * @param {object} image - Image to create directives for.
+ * @param {object} [imageOptions] - JSON table containing supported image options.
+ * @returns {string} Formatted directives string.
+ */
+function generateLegacyDirectives(image, imageOptions) {
+  if (image == null)
+    return;
+
+  if (imageOptions === undefined || imageOptions == null)
+    imageOptions = {};
+
+  var width = imageOptions.crop ? 43 : image.width,
+      height = imageOptions.crop ? 43 : image.height;
+
+  // Fetch color codes for the signplaceholder asset.
+  var colors = getSignPlaceHolder();
+
+  // Draw the selected image on a canvas, to fetch the pixel data.
+  var canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  var canvasContext = canvas.getContext("2d");
+
+  // Flip image upside down, to compensate for the 'inverted' y axis.
+  if (!imageOptions.crop) {
+    canvasContext.translate(0, image.height);
+    canvasContext.scale(1,-1);
+    canvasContext.drawImage(image, 0, 0, width, height);
+    canvasContext.scale(1,1);
+  } else {
+    canvasContext.translate(0, 43);
+    canvasContext.scale(1,-1);
+    canvasContext.drawImage(image, 43, 0, 43, 43, 0, 0, 43, 43);
+    canvasContext.scale(1,1);
+  }
+
+  var drawables = "";
+
+  // Set the source image white before starting.
+  if (imageOptions.hasOwnProperty('setWhite') && imageOptions.setWhite)
+    drawables = "?setcolor=fff?replace;fff0=fff" + drawables;
+
+  // Scale and crop
+  var maxDimension = height > width ? height : width;
+  var scale = Math.ceil(maxDimension / 43);
+  drawables = drawables + "?scalenearest=" + scale + "?crop=0;0;" + width + ";" + height;
+
+  var drawableTemplate = "?blendmult=/objects/outpost/customsign/signplaceholder.png"
+
+  // Calculate amount of signplaceholder frames needed horizontally and vertically to form the image.
+  var frameCount = [
+    Math.ceil(width / 32),
+    Math.ceil(height / 8)
+  ];
+
+  // For every frame, create a new blendmult 'layer'.
+  for (var frameX = 0; frameX < frameCount[0]; frameX++) {
+    for (var frameY = 0; frameY < frameCount[1]; frameY++) {
+      var currentX = frameX * 32;
+      var currentY = frameY * 8;
+
+      var drawable = drawableTemplate;
+
+      drawable += ";" + (-frameX * 32) + ";" + (frameY * - 8) + "?replace";
+
+      var containsPixels = false;
+
+      // For every pixel of this frame, fetch it's color code.
+      for (var x = 0; x < 32; x++) {
+        for (var y = 0; y < 8; y++) {
+          // Raise Y now so we can safely continue when checks fail; remember to check y-1!
+          currentY++;
+
+          if (currentX > canvas.width - 1 || currentY-1 > canvas.height - 1)
+            continue;
+
+          var pixelC = canvasContext.getImageData(currentX, currentY-1, 1, 1).data;
+
+          if (pixelC[3] != 0)
+            containsPixels = true;
+
+          if (pixelC[0] == 255 && pixelC[1] == 255 && pixelC[2] == 255)
+          {
+            pixelC[0] = 254;
+            pixelC[1] = 254;
+            pixelC[2] = 254;
+          }
+
+          drawable += ";" + colorToHex(colors[x][y]) + "=" + colorToHex(pixelC);
+        }
+
+        currentX++;
+        currentY = frameY * 8;
+      }
+
+      // If the current frame does not contain nay pixels, we don't have to add the layer.
+      if (containsPixels)
+        drawables += drawable;
+    }
+  }
+
+  // Finally, revert the setWhite.
+  if (imageOptions.hasOwnProperty('setWhite') && imageOptions.setWhite) {
+    drawables += "?replace;ffffffff=00000000";
   }
 
   return drawables;
