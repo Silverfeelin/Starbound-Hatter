@@ -53,8 +53,8 @@ $(function() {
   });
 
   // Bind generate output
-  $("#btnPlainText").click(generatePlainText);
-  $("#btnCommand").click(generateCommand);
+  $("#btnPlainText").click(function(){generatePlainText();});
+  $("#btnCommand").click(function(){generateCommand();});
   $("#btnFileClipboard").click(function(){generatePlainText(true)});
   $("#btnCommandClipboard").click(function(){generateCommand(true)});
 
