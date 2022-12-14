@@ -96,6 +96,21 @@ $(function() {
       if (!checkMask.checked) canvasHair.fadeIn(100);
     }
   });
+
+
+  // Drag & Drop support
+
+  // preventing page from redirecting
+  $("html").on("dragover", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+  });
+
+  $("html").on("drop", function(e) { 
+    e.preventDefault(); 
+    e.stopPropagation(); 
+    readDrawableInput(e.originalEvent.dataTransfer, drawableLoaded);
+  });
 });
 
 /**
