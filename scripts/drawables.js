@@ -55,6 +55,8 @@ $(function() {
   // Bind generate output
   $("#btnPlainText").click(generatePlainText);
   $("#btnCommand").click(generateCommand);
+  $("#btnFileClipboard").click(function(){generatePlainText(true)});
+  $("#btnCommandClipboard").click(function(){generateCommand(true)});
 
   // Load preview
   imageCharacter = new Image();
@@ -313,24 +315,32 @@ function generateItem() {
 /**
  * Generates a hat export for the current image, and starts a download for it.
  */
-function generatePlainText() {
+function generatePlainText(toClipboard) {
   var obj = generateItem();
 
-  var blob = new Blob([ JSON.stringify(obj, null, 2) ], {type: "text/plain;charset=utf8"});
-  saveAs(blob, "CustomHat.json");
+  if (toClipboard) {
+    navigator.clipboard.writeText(JSON.stringify(obj));
+  } else {
+    var blob = new Blob([ JSON.stringify(obj, null, 2) ], {type: "text/plain;charset=utf8"});
+    saveAs(blob, "CustomHat.json");
+  }
 }
 
 /**
  * Generates a hat export for the current image, and starts a download for it.
  */
-function generateCommand() {
+function generateCommand(toClipboard) {
   var obj = generateItem();
 
   // Escape quotes in JSON parameters to prevent early end of stream (since parameters are wrapped in ' in the chat processor).
   var cmd = "/spawnitem " + obj.name + " 1 '" + JSON.stringify(obj.parameters).replace(/'/g, "\\'") + "'";
 
-  var blob = new Blob([ cmd ], {type: "text/plain;charset=utf8"});
-  saveAs(blob, "CustomHatCommand.txt");
+  if (toClipboard) {
+    navigator.clipboard.writeText(cmd);
+  } else {
+    var blob = new Blob([ cmd ], {type: "text/plain;charset=utf8"});
+    saveAs(blob, "CustomHatCommand.txt");
+  }
 }
 
 /**
